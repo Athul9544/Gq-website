@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Golden Qube | Blog Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/favicon.png?v=2" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1f1915;--dark:#0f0f10;--gold:#dac171;--yel:#FFE169;--bg:#f6f4ef;--card:#fff;--line:#e6e1d6;--muted:#7a7268;--red:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+a{color:inherit}
+.top{background:var(--dark);color:#fff;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.top .brand{text-decoration:none;display:flex;align-items:center;gap:12px;font-family:Anton,Impact,sans-serif;font-size:20px;letter-spacing:.06em;text-transform:uppercase}
+.top .brand img{height:34px}
+.top .brand span{color:var(--gold)}
+.top .actions{display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:11px 20px;font:600 13px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;background:var(--ink);color:#fff;transition:transform .2s,box-shadow .2s;text-decoration:none}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px -12px rgba(0,0,0,.5)}
+.btn.gold{background:var(--gold);color:var(--ink)}
+.btn.yel{background:var(--yel);color:var(--ink)}
+.btn.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}
+.btn.danger{background:var(--red);color:#fff}
+.btn.sm{padding:8px 14px;font-size:12px}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
+h1{font-family:Anton,Impact,sans-serif;font-size:40px;line-height:1;margin:0 0 6px;text-transform:uppercase;letter-spacing:.02em}
+.sub{color:var(--muted);margin:0 0 26px}
+.grid{display:grid;grid-template-columns:1fr 1.15fr;gap:26px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 20px 40px -32px rgba(0,0,0,.35)}
+.card h2{font-family:Anton,Impact,sans-serif;font-size:22px;margin:0 0 16px;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;justify-content:space-between}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;transition:border-color .2s}
+.item:hover{border-color:var(--gold)}
+.item.active{border-color:var(--ink);background:#fffdf5}
+.item img{width:72px;height:54px;object-fit:cover;border-radius:10px;background:#eee}
+.item .t{font-weight:600;line-height:1.3}
+.item .m{font-size:12px;color:var(--muted);margin-top:3px}
+.item .m .draft{display:inline-block;background:#f1d9d5;color:var(--red);padding:2px 8px;border-radius:999px;font-weight:600;font-size:11px;margin-right:6px}
+.item .ops{display:flex;gap:6px}
+.icon{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:background .2s}
+.icon:hover{background:var(--yel)}
+.icon.del:hover{background:#f6d4cf}
+label{display:block;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+input[type=text],input[type=url],input[type=password],textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink);outline:0;transition:border-color .2s,box-shadow .2s}
+input:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(218,193,113,.3)}
+textarea{min-height:120px;resize:vertical;line-height:1.55}
+textarea.big{min-height:260px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+.imgbox{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:start}
+.imgbox .prev{width:150px;height:112px;border-radius:12px;background:#eee url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="%23bbb" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>') center/40px no-repeat;object-fit:cover;border:1px solid var(--line)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.toggle{display:flex;align-items:center;gap:10px;margin-top:16px;font-weight:500}
+.toggle input{width:18px;height:18px;accent-color:var(--ink)}
+.foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;align-items:center}
+.msg{margin-left:auto;font-size:13px;color:var(--muted)}
+.msg.ok{color:#1f7a3a}.msg.err{color:var(--red)}
+.login{max-width:420px;margin:80px auto;text-align:center}
+.login .card{padding:34px 30px}
+.login img{height:64px;margin-bottom:10px}
+.login h1{font-size:30px}
+.login .btn{width:100%;justify-content:center;margin-top:18px}
+.empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+.hidden{display:none!important}
+.drag{cursor:grab}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:13px;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+
+/* v2: login + dashboard */
+.login{max-width:none;margin:0;text-align:left}
+.login-wrap{min-height:calc(100vh - 64px);display:grid;grid-template-columns:1.1fr 1fr}
+@media(max-width:860px){.login-wrap{grid-template-columns:1fr}.login-art{min-height:260px}}
+.login-art{position:relative;overflow:hidden;background:#0f0f10;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:48px}
+.login-art::before{content:"";position:absolute;inset:-40% -20% auto auto;width:70%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(218,193,113,.55),rgba(218,193,113,0) 65%);filter:blur(10px)}
+.login-art::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:64px 64px;mask-image:linear-gradient(180deg,rgba(0,0,0,.9),transparent)}
+.login-art>*{position:relative;z-index:1}
+.login-art .logo{height:78px;width:auto}
+.login-art h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:clamp(34px,4.4vw,60px);line-height:.98;text-transform:uppercase;letter-spacing:.01em;margin:26px 0 14px}
+.login-art h2 span{color:var(--gold)}
+.login-art p{color:rgba(255,255,255,.7);max-width:420px;line-height:1.6;margin:0}
+.login-art .tags{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.login-art .tags span{font-family:Anton,Impact,sans-serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;border:1px solid rgba(218,193,113,.5);border-radius:999px;color:var(--gold)}
+.login-art .cube{position:absolute;right:-40px;bottom:-60px;width:320px;opacity:.12;z-index:0}
+.login-art .foot{font-size:12px;color:rgba(255,255,255,.45);margin-top:0}
+.login-form{display:flex;align-items:center;justify-content:center;padding:48px 24px;background:var(--bg)}
+.login-form .card{width:100%;max-width:420px;padding:36px 32px}
+.login-form .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:#b8922e;margin-bottom:8px}
+.login-form h1{font-size:34px;margin-bottom:8px}
+.login-form .sub{margin-bottom:18px}
+.pwwrap{position:relative}
+.pwwrap input{padding-right:52px}
+.pwwrap .eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;cursor:pointer;font-size:16px;color:var(--muted);padding:6px}
+.login-form .btn{width:auto;min-width:200px;display:flex;justify-content:center;margin:22px auto 0;padding:14px 34px;background:var(--ink)}
+.login-form .btn:hover{background:#000}
+.login-form .hint{margin-top:12px;min-height:16px;text-align:center}
+.login-form .hint.err{color:var(--red);font-weight:600}
+/* dashboard shell */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 64px)}
+@media(max-width:860px){.shell{grid-template-columns:1fr}.side{position:sticky;top:64px;z-index:9}}
+.side{background:#fff;border-right:1px solid var(--line);padding:22px 14px}
+@media(max-width:860px){.side{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;border-right:0;border-bottom:1px solid var(--line)}.side .lbl{display:none}}
+.side .lbl{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:0 12px 10px}
+.nav{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border:0;border-radius:12px;background:transparent;font:500 14px Inter,sans-serif;color:var(--ink);cursor:pointer;transition:background .2s;white-space:nowrap}
+.nav .ic{width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:#f1ede3;font-size:15px}
+.nav:hover{background:#f6f2e6}
+.nav.on{background:var(--ink);color:#fff}
+.nav.on .ic{background:var(--gold);color:var(--ink)}
+.nav.soon{opacity:.5;cursor:not-allowed}
+.nav .soon-tag{margin-left:auto;font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:#eee;border-radius:999px;padding:3px 8px;color:var(--muted)}
+.content{padding:32px 28px 80px}
+.crumb{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px}
+.crumb b{color:#b8922e}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:22px 0 26px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.stat .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stat .v{font-family:Anton,Impact,sans-serif;font-size:38px;line-height:1;margin-top:6px}
+.stat.hi{background:var(--yel);border-color:var(--yel)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;display:flex;flex-direction:column;gap:10px;min-height:170px;text-align:left}
+.tile:hover{transform:translateY(-3px);box-shadow:0 22px 40px -28px rgba(0,0,0,.45);border-color:var(--gold)}
+.tile .ic{width:46px;height:46px;border-radius:14px;background:var(--ink);color:var(--yel);display:inline-flex;align-items:center;justify-content:center;font-size:22px}
+.tile h3{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:22px;text-transform:uppercase;letter-spacing:.02em;margin:4px 0 0}
+.tile p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+.tile .go{margin-top:auto;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#b8922e}
+.tile.soon{opacity:.55;cursor:default}
+.tile.soon:hover{transform:none;box-shadow:none;border-color:var(--line)}
+.tile.soon .ic{background:#e9e4d8;color:var(--muted)}
+.view{display:none}.view.on{display:block}
+.backlink{display:inline-flex;align-items:center;gap:6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted);text-decoration:none;background:none;border:0;cursor:pointer;padding:0;margin-bottom:10px}
+.backlink:hover{color:var(--ink)}
+.wrap{max-width:none;padding:0}
+
+.login-simple{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:40px 20px;background:radial-gradient(60% 50% at 50% 0%,rgba(218,193,113,.28),transparent 70%),var(--bg)}
+.login-card{position:relative;overflow:hidden;width:100%;max-width:420px;padding:40px 34px 34px;text-align:center;border-top:4px solid var(--gold)}
+.login-glow{position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:320px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(255,225,105,.45),transparent 65%);pointer-events:none}
+.login-card>*{position:relative}
+.login-card>.login-glow{position:absolute}
+.login-card .logo{height:54px;width:auto;margin-bottom:18px;filter:drop-shadow(0 8px 16px rgba(184,146,46,.25))}
+.login-card .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:#b8922e;margin-bottom:6px}
+.login-card h1{font-size:34px;margin-bottom:6px}
+.login-card .sub{margin-bottom:14px}
+.login-card label{text-align:left}
+.login-card .btn{width:100%;justify-content:center;margin-top:18px;padding:14px 20px}
+.login-card .hint{margin-top:12px;min-height:16px}
+.login-card .hint.err{color:var(--red);font-weight:600}
+.shell.one{grid-template-columns:1fr}
+.content{max-width:1180px;margin:0 auto;width:100%}
+.tiles{grid-template-columns:repeat(auto-fit,minmax(260px,360px))}
+body.at-login .top .brand img{display:none}
+
+#blogGrid { grid-template-columns: 1fr; }
+#blogGrid #editorCard { display: none; }
+#blogGrid.editing #listCard { display: none; }
+#blogGrid.editing #editorCard { display: block; max-width: 900px; margin: 0 auto; width: 100%; }
+#blogGrid #listCard .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+#editorCard .backlink { margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/" title="Back to site"><img src="../assets/gqube-logo-nav.png?v=3" alt=""><span>Admin</span>&nbsp;Panel</a>
+  <div class="actions">
+    <a class="btn ghost sm" href="/our-campaigns" target="_blank">View blog ↗</a>
+    <button class="btn gold sm hidden" id="logout">Log out</button>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<section class="login" id="login">
+  <div class="login-wrap">
+    <div class="login-art">
+      <div>
+        <img class="logo" src="../assets/gqube-logo-nav.png?v=3" alt="Golden Qube">
+        <h2>The <span>Control Cave</span></h2>
+        <p>Your secret spot to control, manage, and occasionally break things.</p>
+        <div class="tags"><span>&#9997; Write</span><span>&#128640; Publish</span><span>&#128171; Shine</span></div>
+      </div>
+      <img class="cube" src="../assets/favicon.png?v=2" alt="">
+      <div class="foot">&copy; 2026 Golden Qube &middot; Admin</div>
+    </div>
+    <div class="login-form">
+      <div class="card">
+        <div class="eyebrow">Admin access</div>
+        <h1>Sign in</h1>
+        <p class="sub">Enter the admin password to continue.</p>
+        <form id="loginForm">
+          <label>Password</label>
+          <div class="pwwrap"><input type="password" id="pw" placeholder="••••••••••" autocomplete="current-password" required><button type="button" class="eye" id="eye" title="Show password">&#128065;</button></div>
+          <button class="btn" type="submit" id="loginBtn">Sign in <span>&rarr;</span></button>
+          <div class="hint" id="loginMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<main class="wrap hidden" id="app">
+<div class="shell one">
+  <div class="content">
+
+  <!-- HOME VIEW -->
+  <section class="view on" id="view-home">
+    <div class="crumb">Admin / <b>Dashboard</b></div>
+    <h1>Welcome back</h1>
+    <p class="sub">Choose what you want to manage.</p>
+    <div class="tiles">
+      <button class="tile" data-view="blog"><span class="ic">&#9998;</span><h3>Blog</h3><p>Insert, edit, reorder and delete the posts shown on the Our Insights page.</p><span class="go">Manage blog &rarr;</span></button>
+    </div>
+  </section>
+
+  <!-- BLOG VIEW -->
+  <section class="view" id="view-blog">
+  <button class="backlink" data-view="home">&larr; Dashboard</button>
+  <div class="crumb">Admin / <b>Blog</b></div>
+  <h1>Blog posts</h1>
+  <p class="sub">Add, edit, reorder or delete the posts shown on the <a href="/our-campaigns" target="_blank">Our Insights</a> page. Drag posts to reorder.</p>
+  <div class="stats">
+    <div class="stat hi"><div class="k">Total posts</div><div class="v" id="stTotal">&ndash;</div></div>
+    <div class="stat"><div class="k">Published</div><div class="v" id="stPub">&ndash;</div></div>
+    <div class="stat"><div class="k">Last update</div><div class="v" id="stLast" style="font-size:20px;line-height:1.3;margin-top:10px">&ndash;</div></div>
+  </div>
+  <div class="grid" id="blogGrid">
+    <div class="card" id="listCard">
+      <h2>All posts <button class="btn yel sm" id="newBtn">+ New post</button></h2>
+      <div class="list" id="list"></div>
+    </div>
+    <div class="card" id="editorCard">
+      <button class="backlink" type="button" id="backToList">&larr; All posts</button>
+      <h2 id="editorTitle">New post</h2>
+      <form id="form">
+        <input type="hidden" id="id">
+        <label>Title</label>
+        <input type="text" id="title" placeholder="Post title" required>
+        <div class="row">
+          <div><label>Slug (URL)</label><input type="text" id="slug" placeholder="auto-from-title"><div class="hint">Post URL: /our-campaigns/<span id="slugPrev">…</span></div></div>
+          <div><label>Custom link (optional)</label><input type="url" id="link" placeholder="https://… or /works/…"><div class="hint">If set, the card opens this link instead of the post page.</div></div>
+        </div>
+        <div class="row">
+          <div><label>Category tag</label><input type="text" id="category" placeholder="Insight / Brand / Campaign"><div class="hint">Small pill shown above the title (default: Insight).</div></div>
+          <div><label>Industry</label><input type="text" id="industry" placeholder="Hospitality"></div>
+        </div>
+        <label>Services (one per line)</label>
+        <textarea id="services" placeholder="Pre-Production&#10;Production&#10;Social Media Marketing" style="min-height:90px"></textarea>
+        <label>Short description</label>
+        <textarea id="excerpt" placeholder="One or two lines shown on the card"></textarea>
+        <label>Cover image</label>
+        <div class="imgbox">
+          <img class="prev" id="prev" alt="">
+          <div>
+            <input type="url" id="image" placeholder="Image URL">
+            <div class="hint">or upload: <input type="file" id="file" accept="image/*"> <span id="upMsg"></span></div>
+            <div class="hint">JPG/PNG/WebP, up to 3.5 MB. Landscape works best.</div>
+          </div>
+        </div>
+        <label>Content</label>
+        <textarea class="big" id="content" placeholder="## The Idea&#10;Write the first section here...&#10;&#10;## The Impact&#10;Write the next section. Each ## heading becomes a block on the post page. Blank line = new paragraph, **bold** for bold."></textarea>
+        <label class="toggle"><input type="checkbox" id="published" checked> Published (visible on the site)</label>
+        <div class="foot">
+          <button class="btn gold" type="submit" id="saveBtn">Save post</button>
+          <button class="btn ghost sm" type="button" id="cancelBtn" style="color:var(--ink);border-color:var(--line)">Cancel</button>
+          <button class="btn danger sm hidden" type="button" id="deleteBtn">Delete</button>
+          <span class="msg" id="msg"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+  </section>
+  </div>
+</div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var API = '/api/posts';
+  var key = null; try { key = sessionStorage.getItem('gq_admin'); } catch(e){}
+  var posts = [], editing = null;
+  var $ = function(id){ return document.getElementById(id); };
+  var toastT;
+  function toast(t){ var el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){el.classList.remove('show')},2200); }
+  function msg(t, cls){ var m=$('msg'); m.textContent=t||''; m.className='msg '+(cls||''); }
+  function slugify(s){ return String(s||'').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80); }
+  function esc(s){ return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function headers(){ return {'Content-Type':'application/json','x-admin-key':key||''}; }
+
+  function showApp(){ document.body.classList.remove('at-login'); $('login').classList.add('hidden'); $('app').classList.remove('hidden'); $('logout').classList.remove('hidden'); load(); }
+  function showLogin(){ document.body.classList.add('at-login'); $('app').classList.add('hidden'); $('logout').classList.add('hidden'); $('login').classList.remove('hidden'); }
+
+  $('loginForm').addEventListener('submit', function(e){
+    e.preventDefault(); $('loginMsg').textContent='Checking…'; $('loginMsg').className='hint'; $('loginBtn').disabled=true;
+    fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('pw').value})})
+      .then(function(r){return r.json();}).then(function(j){
+        $('loginBtn').disabled=false; if(j.ok){ key=$('pw').value; try{sessionStorage.setItem('gq_admin',key);}catch(e){} $('loginMsg').textContent=''; setView('home'); showApp(); }
+        else { $('loginMsg').textContent='Wrong password. Please try again.'; $('loginMsg').className='hint err'; }
+      }).catch(function(){ $('loginBtn').disabled=false; $('loginMsg').textContent='Could not reach the server.'; $('loginMsg').className='hint err'; });
+  });
+  $('logout').addEventListener('click', function(){ key=null; try{sessionStorage.removeItem('gq_admin');}catch(e){} showLogin(); });
+
+  function load(){
+    $('list').innerHTML='<div class="empty">Loading…</div>';
+    fetch(API+'?all=1&_='+Date.now(),{headers:headers()}).then(function(r){ if(r.status===401){showLogin();throw 0;} return r.json(); })
+      .then(function(j){ posts=j; render(); }).catch(function(){ $('list').innerHTML='<div class="empty">Could not load posts.</div>'; });
+  }
+
+  function render(){
+    stats();
+    var l=$('list'); l.innerHTML='';
+    if(!posts.length){ l.innerHTML='<div class="empty">No posts yet. Click “New post”.</div>'; return; }
+    posts.forEach(function(p){
+      var d=document.createElement('div'); d.className='item drag'+(editing===p.id?' active':''); d.draggable=true; d.dataset.id=p.id;
+      d.innerHTML='<img src="'+esc(p.image||'')+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+        '<div><div class="t">'+esc(p.title)+'</div><div class="m">'+(p.published===false?'<span class="draft">Draft</span>':'')+new Date(p.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+' &middot; /our-campaigns/'+esc(p.slug)+'</div></div>'+
+        '<div class="ops"><button type="button" class="icon" title="Edit" data-act="edit">✎</button><button type="button" class="icon del" title="Delete" data-act="del">🗑</button></div>';
+      d.addEventListener('click', function(e){ var a=e.target.getAttribute('data-act'); if(a==='del') return del(p); edit(p); });
+      d.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text/plain', p.id); d.style.opacity='.5'; });
+      d.addEventListener('dragend', function(){ d.style.opacity=''; });
+      d.addEventListener('dragover', function(e){ e.preventDefault(); d.style.borderColor='var(--gold)'; });
+      d.addEventListener('dragleave', function(){ d.style.borderColor=''; });
+      d.addEventListener('drop', function(e){ e.preventDefault(); d.style.borderColor=''; var from=e.dataTransfer.getData('text/plain'); if(!from||from===p.id) return;
+        var ids=posts.map(function(x){return x.id;}); var fi=ids.indexOf(from), ti=ids.indexOf(p.id); ids.splice(fi,1); ids.splice(ti,0,from);
+        fetch(API,{method:'PATCH',headers:headers(),body:JSON.stringify({order:ids})}).then(function(r){return r.json();}).then(function(j){ if(j.posts){posts=j.posts;render();toast('Order saved');} });
+      });
+      l.appendChild(d);
+    });
+  }
+
+  function openEditor(){ $('blogGrid').classList.add('editing'); window.scrollTo(0,0); }
+  function closeEditor(){ $('blogGrid').classList.remove('editing'); }
+  function clearForm(){
+    editing=null; $('form').reset(); $('id').value=''; $('prev').src=''; $('category').value='Insight'; $('content').value='## The Idea\nWrite what the post is about...\n\n## The Impact\nWrite the results or key takeaways...'; $('editorTitle').textContent='New post'; $('deleteBtn').classList.add('hidden'); $('slugPrev').textContent='…'; msg(''); $('upMsg').textContent=''; $('published').checked=true; render();
+  }
+  function edit(p){
+    editing=p.id; $('id').value=p.id; $('title').value=p.title; $('slug').value=p.slug; $('link').value=p.link||''; $('excerpt').value=p.excerpt||''; $('image').value=p.image||''; $('prev').src=p.image||''; $('content').value=p.content||''; $('published').checked=p.published!==false; $('category').value=p.category||''; $('industry').value=p.industry||''; $('services').value=(p.services||[]).join('\n');
+    $('editorTitle').textContent='Edit post'; $('deleteBtn').classList.remove('hidden'); $('slugPrev').textContent=p.slug; msg(''); render(); openEditor();
+  }
+  function del(p){
+    if(!confirm('Delete “'+p.title+'”? This cannot be undone.')) return;
+    fetch(API+'?id='+encodeURIComponent(p.id),{method:'DELETE',headers:headers()}).then(function(r){return r.json();}).then(function(j){
+      if(j.ok){ posts=j.posts; if(editing===p.id){ clearForm(); closeEditor(); } else render(); toast('Post deleted'); } else alert(j.error||'Delete failed');
+    });
+  }
+  $('newBtn').addEventListener('click', function(){ clearForm(); openEditor(); });
+  $('cancelBtn').addEventListener('click', function(){ clearForm(); closeEditor(); });
+  $('backToList').addEventListener('click', function(){ closeEditor(); });
+  $('deleteBtn').addEventListener('click', function(){ var p=posts.find(function(x){return x.id===editing;}); if(p) del(p); });
+  $('title').addEventListener('input', function(){ if(!editing||!$('slug').value){ $('slug').value=slugify(this.value); } $('slugPrev').textContent=$('slug').value||'…'; });
+  $('slug').addEventListener('input', function(){ this.value=slugify(this.value); $('slugPrev').textContent=this.value||'…'; });
+  $('image').addEventListener('input', function(){ $('prev').src=this.value; });
+  $('file').addEventListener('change', function(){
+    var f=this.files[0]; if(!f) return; if(f.size>3.5*1024*1024){ $('upMsg').textContent='Too large (max 3.5 MB)'; return; }
+    $('upMsg').textContent='Uploading…'; var rd=new FileReader();
+    rd.onload=function(){ fetch('/api/upload',{method:'POST',headers:headers(),body:JSON.stringify({name:f.name,dataUrl:rd.result})}).then(function(r){return r.json();}).then(function(j){
+      if(j.url){ $('image').value=j.url; $('prev').src=j.url; $('upMsg').textContent='Uploaded ✓'; } else $('upMsg').textContent=j.error||'Upload failed';
+    }).catch(function(){ $('upMsg').textContent='Upload failed'; }); };
+    rd.readAsDataURL(f);
+  });
+  $('form').addEventListener('submit', function(e){
+    e.preventDefault(); $('saveBtn').disabled=true; msg('Saving…');
+    var body={id:$('id').value||undefined,title:$('title').value,slug:$('slug').value,link:$('link').value,excerpt:$('excerpt').value,image:$('image').value,content:$('content').value,published:$('published').checked,category:$('category').value,industry:$('industry').value,services:$('services').value};
+    fetch(API,{method:'POST',headers:headers(),body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(j){
+      $('saveBtn').disabled=false;
+      if(j.ok){ posts=j.posts; editing=j.post.id; $('id').value=j.post.id; $('slug').value=j.post.slug; $('slugPrev').textContent=j.post.slug; $('editorTitle').textContent='Edit post'; $('deleteBtn').classList.remove('hidden'); msg('Saved ✓','ok'); toast('Post saved'); render(); }
+      else msg(j.error||'Save failed','err');
+    }).catch(function(){ $('saveBtn').disabled=false; msg('Save failed','err'); });
+  });
+
+
+  // ---- views
+  function setView(v){
+    document.querySelectorAll('.view').forEach(function(s){ s.classList.toggle('on', s.id==='view-'+v); });
+    document.querySelectorAll('.nav[data-view]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-view')===v); });
+    try{ sessionStorage.setItem('gq_view', v); }catch(e){}
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('[data-view]').forEach(function(b){ b.addEventListener('click', function(){ setView(b.getAttribute('data-view')); }); });
+  function stats(){
+    var pub=posts.filter(function(p){return p.published!==false;}).length;
+    $('stTotal').textContent=posts.length; $('stPub').textContent=pub; 
+    var last=posts.slice().sort(function(a,b){return new Date(b.updated||b.date)-new Date(a.updated||a.date);})[0];
+    $('stLast').textContent=last? new Date(last.updated||last.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  }
+  $('eye').addEventListener('click', function(){ var i=$('pw'); i.type = i.type==='password' ? 'text' : 'password'; });
+  try{ var sv=sessionStorage.getItem('gq_view'); if(sv) setView(sv); }catch(e){}
+  if(!$('id').value){ $('category').value='Insight'; $('content').value='## The Idea\nWrite what the post is about...\n\n## The Impact\nWrite the results or key takeaways...'; }
+  if(key) showApp(); else showLogin();
+})();
+</script>
+</body>
+</html>
