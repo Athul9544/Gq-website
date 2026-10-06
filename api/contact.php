@@ -40,16 +40,8 @@ foreach ($configPaths as $path) {
     }
 }
 
-// a plain-text key file is accepted too (api/resend-key.txt)
-if (empty($cfg['resend_api_key'])) {
-    foreach ([__DIR__ . '/resend-key.txt', __DIR__ . '/.resend-key'] as $keyFile) {
-        if (is_file($keyFile)) {
-            $cfg['resend_api_key'] = trim((string)file_get_contents($keyFile));
-            $configFound = $configFound ?: $keyFile;
-            break;
-        }
-    }
-}
+// Note: the key is only read from a .php file or an environment variable.
+// A plain .txt key file would be downloadable over the web, so it is not supported.
 
 $apiKey = trim((string)($cfg['resend_api_key'] ?? '')) ?: trim((string)(getenv('RESEND_API_KEY') ?: ''));
 $to     = trim((string)($cfg['contact_to'] ?? '')) ?: (getenv('CONTACT_TO') ?: 'info@goldenqube.com');
