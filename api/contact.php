@@ -93,21 +93,24 @@ if (function_exists('curl_init')) {
         CURLOPT_POST           => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 20,
+        CURLOPT_USERAGENT      => 'GoldenQubeSite/1.0',
         CURLOPT_HTTPHEADER     => [
             'Authorization: Bearer ' . $apiKey,
             'Content-Type: application/json',
+            'Accept: application/json',
         ],
         CURLOPT_POSTFIELDS     => $payload,
     ]);
     $res  = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err  = curl_error($ch);
-    curl_close($ch);
+    if (PHP_VERSION_ID < 80500) { curl_close($ch); }
 } else {
     // hosts without the cURL extension
     $ctx = stream_context_create(['http' => [
         'method'        => 'POST',
-        'header'        => "Authorization: Bearer {$apiKey}\r\nContent-Type: application/json\r\n",
+        'header'        => "Authorization: Bearer {$apiKey}\r\nContent-Type: application/json\r\n"
+                         . "Accept: application/json\r\nUser-Agent: GoldenQubeSite/1.0\r\n",
         'content'       => $payload,
         'timeout'       => 20,
         'ignore_errors' => true,
