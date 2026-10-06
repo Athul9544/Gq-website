@@ -10,6 +10,13 @@
  */
 declare(strict_types=1);
 
+/* ---------------------------------------------------------------------------
+ * EASIEST SETUP: paste your Resend API key between the quotes below, save,
+ * and the form works. (Leave it empty to use api/config.php or an env var.)
+ * Keep this blank in the git repo so the key never gets committed.
+ * ------------------------------------------------------------------------- */
+$INLINE_RESEND_KEY = '';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
@@ -43,7 +50,10 @@ foreach ($configPaths as $path) {
 // Note: the key is only read from a .php file or an environment variable.
 // A plain .txt key file would be downloadable over the web, so it is not supported.
 
-$apiKey = trim((string)($cfg['resend_api_key'] ?? '')) ?: trim((string)(getenv('RESEND_API_KEY') ?: ''));
+$apiKey = trim($INLINE_RESEND_KEY)
+    ?: trim((string)($cfg['resend_api_key'] ?? ''))
+    ?: trim((string)(getenv('RESEND_API_KEY') ?: ''));
+if ($apiKey !== '' && $configFound === null) { $configFound = 'inline in contact.php'; }
 $to     = trim((string)($cfg['contact_to'] ?? '')) ?: (getenv('CONTACT_TO') ?: 'info@goldenqube.com');
 $from   = trim((string)($cfg['contact_from'] ?? '')) ?: (getenv('CONTACT_FROM') ?: 'Golden Qube Website <info@goldenqube.com>');
 
