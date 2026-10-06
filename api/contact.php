@@ -19,18 +19,59 @@ function out(int $status, array $data): void {
     exit;
 }
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+// ?selftest=1 is allowed over GET so the setup can be checked from a browser
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' && !isset($_GET['selftest'])) {
     out(405, ['ok' => false, 'error' => 'Method not allowed']);
 }
 
 // ---- config ---------------------------------------------------------------
+// Looked for in this order, so it works wherever the file was dropped on the host.
 $cfg = [];
-if (is_file(__DIR__ . '/config.php')) {
-    $cfg = require __DIR__ . '/config.php';
+$configPaths = [
+    __DIR__ . '/config.php',
+    __DIR__ . '/../config.php',
+    __DIR__ . '/../api/config.php',
+];
+$configFound = null;
+foreach ($configPaths as $path) {
+    if (is_file($path)) {
+        $maybe = require $path;
+        if (is_array($maybe)) { $cfg = $maybe; $configFound = $path; break; }
+    }
 }
-$apiKey = $cfg['resend_api_key'] ?? getenv('RESEND_API_KEY') ?: '';
-$to     = $cfg['contact_to']     ?? (getenv('CONTACT_TO')   ?: 'info@goldenqube.com');
-$from   = $cfg['contact_from']   ?? (getenv('CONTACT_FROM') ?: 'Golden Qube Website <info@goldenqube.com>');
+
+// a plain-text key file is accepted too (api/resend-key.txt)
+if (empty($cfg['resend_api_key'])) {
+    foreach ([__DIR__ . '/resend-key.txt', __DIR__ . '/.resend-key'] as $keyFile) {
+        if (is_file($keyFile)) {
+            $cfg['resend_api_key'] = trim((string)file_get_contents($keyFile));
+            $configFound = $configFound ?: $keyFile;
+            break;
+        }
+    }
+}
+
+$apiKey = trim((string)($cfg['resend_api_key'] ?? '')) ?: trim((string)(getenv('RESEND_API_KEY') ?: ''));
+$to     = trim((string)($cfg['contact_to'] ?? '')) ?: (getenv('CONTACT_TO') ?: 'info@goldenqube.com');
+$from   = trim((string)($cfg['contact_from'] ?? '')) ?: (getenv('CONTACT_FROM') ?: 'Golden Qube Website <info@goldenqube.com>');
+
+// ---- self-test: /api/contact.php?selftest=1 (never prints the key) ---------
+if (isset($_GET['selftest'])) {
+    out(200, [
+        'ok'            => (bool)$apiKey,
+        'php'           => PHP_VERSION,
+        'curl'          => function_exists('curl_init'),
+        'openssl'       => extension_loaded('openssl'),
+        'config_file'   => $configFound ? basename(dirname($configFound)) . '/' . basename($configFound) : null,
+        'key_present'   => (bool)$apiKey,
+        'key_length'    => strlen($apiKey),
+        'key_prefix_ok' => $apiKey !== '' && strpos($apiKey, 're_') === 0,
+        'send_to'       => $to,
+        'send_from'     => $from,
+        'hint'          => $apiKey ? 'Configured. Submit the form to test a real send.'
+                                   : 'Create api/config.php next to this file with your Resend key.',
+    ]);
+}
 
 if (!$apiKey) {
     out(500, ['ok' => false, 'error' => 'Email is not configured yet.']);
