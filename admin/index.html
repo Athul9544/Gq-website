@@ -238,7 +238,7 @@ body.at-login .top .brand img{display:none}
         <input type="text" id="title" placeholder="Post title" required>
         <div class="row">
           <div><label>Slug (URL)</label><input type="text" id="slug" placeholder="auto-from-title"><div class="hint">Post URL: /our-campaigns/<span id="slugPrev">…</span></div></div>
-          <div><label>Custom link (optional)</label><input type="url" id="link" placeholder="https://… or /works/…"><div class="hint">If set, the card opens this link instead of the post page.</div></div>
+          <div><label>Custom link (optional)</label><input type="text" id="link" placeholder="https://… or /works/…"><div class="hint">If set, the card opens this link instead of the post page.</div></div>
         </div>
         <div class="row">
           <div><label>Category tag</label><input type="text" id="category" placeholder="Insight / Brand / Campaign"><div class="hint">Small pill shown above the title (default: Insight).</div></div>
@@ -252,7 +252,9 @@ body.at-login .top .brand img{display:none}
         <div class="imgbox">
           <img class="prev" id="prev" alt="">
           <div>
-            <input type="url" id="image" placeholder="Image URL">
+            <!-- text, not url: uploads return a site path like /assets/blog/img/cover.jpg,
+                 which type="url" rejects as invalid and blocks the save -->
+            <input type="text" id="image" placeholder="/assets/blog/img/cover.jpg or https://…">
             <div class="hint">or upload: <input type="file" id="file" accept="image/*"> <span id="upMsg"></span></div>
             <div class="hint">JPG/PNG/WebP. Big photos are resized automatically. Landscape works best.</div>
           </div>
