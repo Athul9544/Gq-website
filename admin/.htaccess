@@ -1,4 +1,12 @@
 # Keep the admin panel out of search results
 <IfModule mod_headers.c>
   Header set X-Robots-Tag "noindex, nofollow"
+
+  # The panel ships with no cache-busting of its own, so without this the
+  # browser keeps serving an old copy after a deploy and fixes appear not to work.
+  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header unset ETag
 </IfModule>
+
+FileETag None
