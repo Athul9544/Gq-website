@@ -12,8 +12,19 @@
 declare(strict_types=1);
 
 /* ---------------------------------------------------------------------------
- * PASTE THE ADMIN PASSWORD BETWEEN THE QUOTES BELOW, then save.
+ * Admin password.
+ *
+ * $ADMIN_PASSWORD_HASH holds a bcrypt hash, so the password itself is never
+ * stored in the repository and a git deploy is all that is needed to make the
+ * login work. To change the password, run locally:
+ *
+ *     php -r "echo password_hash('your new password', PASSWORD_BCRYPT);"
+ *
+ * and paste the result below. A plain password in api/config.php
+ * ('admin_password') or in the ADMIN_PASSWORD environment variable still works
+ * and takes precedence.
  * ------------------------------------------------------------------------- */
+$ADMIN_PASSWORD_HASH   = '$2y$10$7/Cx4jkU18L.ICDu2Xg/UetCmJJeHjEdGj1xlfi4gcZMPHwZcsx5.';
 $ADMIN_PASSWORD_INLINE = '';
 
 function gq_json(int $status, $data): void {
@@ -45,17 +56,37 @@ function gq_admin_password(): string {
         ?: trim((string)(getenv('ADMIN_PASSWORD') ?: ''));
 }
 
+function gq_admin_password_hash(): string {
+    global $ADMIN_PASSWORD_HASH;
+    $cfg = gq_config();
+    return trim((string)($cfg['admin_password_hash'] ?? ''))
+        ?: trim((string)($ADMIN_PASSWORD_HASH ?? ''));
+}
+
+/** is a password configured at all? */
+function gq_admin_password_set(): bool {
+    return gq_admin_password() !== '' || gq_admin_password_hash() !== '';
+}
+
+/** check a password against the plain value or the bcrypt hash */
+function gq_check_password(string $given): bool {
+    if ($given === '') return false;
+    $plain = gq_admin_password();
+    if ($plain !== '' && hash_equals($plain, $given)) return true;
+    $hash = gq_admin_password_hash();
+    return $hash !== '' && password_verify($given, $hash);
+}
+
 /** true when the request carries the right admin key */
 function gq_is_authed(): bool {
-    $pw = gq_admin_password();
-    if ($pw === '') return false;
+    if (!gq_admin_password_set()) return false;
     $given = $_SERVER['HTTP_X_ADMIN_KEY'] ?? '';
     if ($given === '' && function_exists('getallheaders')) {
         foreach (getallheaders() as $k => $v) {
             if (strtolower($k) === 'x-admin-key') { $given = $v; break; }
         }
     }
-    return is_string($given) && $given !== '' && hash_equals($pw, $given);
+    return is_string($given) && gq_check_password($given);
 }
 
 function gq_body(): array {
