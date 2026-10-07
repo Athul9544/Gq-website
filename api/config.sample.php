@@ -13,4 +13,7 @@ return [
     // Sender. The domain here must be verified in Resend.
     // Before goldenqube.com is verified you can test with: 'Golden Qube <onboarding@resend.dev>'
     'contact_from'   => 'Golden Qube Website <info@goldenqube.com>',
+
+    // Password for the /admin blog panel
+    'admin_password'  => 'PASTE_YOUR_ADMIN_PASSWORD_HERE',
 ];
