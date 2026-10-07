@@ -10,7 +10,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
             'php'              => PHP_VERSION,
             'password_set'     => gq_admin_password_set(),
             'password_source'  => gq_admin_password() !== '' ? 'plain' : (gq_admin_password_hash() !== '' ? 'hash' : 'none'),
+            'storage_dir'      => gq_storage_dir(),
+            'storage_survives_deploy' => gq_storage_is_outside_web(),
             'data_dir_writable'=> is_writable(gq_data_dir()),
+            'uploads_dir'      => gq_uploads_dir(),
             'posts_stored'     => count(gq_read_posts()),
             'hint'             => gq_admin_password_set()
                 ? 'Ready. Log in at /admin.'

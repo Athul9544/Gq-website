@@ -34,11 +34,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' && !isset($_GET['selftest'])) 
 // ---- config ---------------------------------------------------------------
 // Looked for in this order, so it works wherever the file was dropped on the host.
 $cfg = [];
-$configPaths = [
-    __DIR__ . '/config.php',
-    __DIR__ . '/../config.php',
-    __DIR__ . '/../api/config.php',
-];
+$configPaths = [];
+// The storage folder sits above the web root, so a git deploy (a clean checkout)
+// cannot delete the key. Look there first.
+if (is_file(__DIR__ . '/_auth.php')) {
+    require_once __DIR__ . '/_auth.php';
+    $store = function_exists('gq_storage_dir') ? gq_storage_dir() : '';
+    if ($store !== '') $configPaths[] = $store . '/config.php';
+}
+$configPaths[] = __DIR__ . '/config.php';
+$configPaths[] = __DIR__ . '/../config.php';
+$configPaths[] = __DIR__ . '/../api/config.php';
 $configFound = null;
 foreach ($configPaths as $path) {
     if (is_file($path)) {
@@ -70,8 +76,9 @@ if (isset($_GET['selftest'])) {
         'key_prefix_ok' => $apiKey !== '' && strpos($apiKey, 're_') === 0,
         'send_to'       => $to,
         'send_from'     => $from,
+        'storage_dir'   => function_exists('gq_storage_dir') ? gq_storage_dir() : null,
         'hint'          => $apiKey ? 'Configured. Submit the form to test a real send.'
-                                   : 'Create api/config.php next to this file with your Resend key.',
+                                   : 'Put your Resend key in config.php inside the storage_dir shown above (a deploy cannot delete it there).',
     ]);
 }
 

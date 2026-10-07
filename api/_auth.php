@@ -35,11 +35,67 @@ function gq_json(int $status, $data): void {
     exit;
 }
 
+/**
+ * Where everything the site writes at runtime lives: posts, uploaded images and
+ * config.php. Deploying from git is a clean checkout, so anything inside the web
+ * folder is deleted on every deploy - this has to sit one level above it.
+ * Returns '' only if nothing is writable.
+ */
+function gq_storage_dir(): string {
+    static $dir = null;
+    if ($dir !== null) return $dir;
+
+    $web = dirname(__DIR__);                 // public_html
+    $candidates = [];
+    $env = getenv('GQ_STORAGE');
+    if ($env) $candidates[] = rtrim($env, '/\\');
+    $candidates[] = dirname($web) . '/gq-storage';   // above the web root: survives deploys
+    $candidates[] = $web . '/gq-storage';            // fallback: works, but a deploy wipes it
+    $candidates[] = __DIR__ . '/data';
+
+    foreach ($candidates as $c) {
+        if (!is_dir($c)) { @mkdir($c, 0775, true); }
+        if (is_dir($c) && is_writable($c)) { $dir = $c; break; }
+    }
+    if ($dir === null) { $dir = ''; return $dir; }
+
+    // if it ended up inside the web root after all, at least keep it unreadable
+    if (strpos($dir, $web) === 0) {
+        $ht = $dir . '/.htaccess';
+        if (!is_file($ht)) {
+            @file_put_contents($ht, "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n");
+        }
+    }
+    return $dir;
+}
+
+/** true when the storage folder is above the web root, i.e. a deploy cannot delete it */
+function gq_storage_is_outside_web(): bool {
+    $dir = gq_storage_dir();
+    if ($dir === '') return false;
+    $dirReal = realpath($dir) ?: $dir;
+    $webReal = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
+    return strpos($dirReal, rtrim($webReal, '/\\') . DIRECTORY_SEPARATOR) !== 0 && $dirReal !== $webReal;
+}
+
+function gq_storage_subdir(string $name): string {
+    $base = gq_storage_dir();
+    if ($base === '') return '';
+    $d = $base . '/' . $name;
+    if (!is_dir($d)) { @mkdir($d, 0775, true); }
+    return is_dir($d) ? $d : '';
+}
+
 function gq_config(): array {
     static $cfg = null;
     if ($cfg !== null) return $cfg;
     $cfg = [];
-    foreach ([__DIR__ . '/config.php', __DIR__ . '/../config.php'] as $p) {
+    $paths = [];
+    $store = gq_storage_dir();
+    if ($store !== '') $paths[] = $store . '/config.php';   // survives deploys, so look here first
+    $paths[] = __DIR__ . '/config.php';
+    $paths[] = __DIR__ . '/../config.php';
+    foreach ($paths as $p) {
         if (is_file($p)) {
             $maybe = require $p;
             if (is_array($maybe)) { $cfg = $maybe; break; }
@@ -97,22 +153,19 @@ function gq_body(): array {
 
 /** where posts.json lives (created on first write) */
 function gq_data_dir(): string {
-    $dir = __DIR__ . '/data';
-    if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
-    $ht = $dir . '/.htaccess';
-    if (is_dir($dir) && !is_file($ht)) {
-        @file_put_contents($ht, "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n");
-    }
-    return $dir;
+    $dir = gq_storage_subdir('data');
+    return $dir !== '' ? $dir : __DIR__ . '/data';
 }
 
 function gq_posts_file(): string { return gq_data_dir() . '/posts.json'; }
 
 function gq_read_posts(): array {
     $f = gq_posts_file();
-    // first run on a fresh server: start from the posts committed in the repo
-    if (!is_file($f) && is_file(__DIR__ . '/data/posts.seed.json')) {
-        $f = __DIR__ . '/data/posts.seed.json';
+    if (!is_file($f)) {
+        // posts written before the storage folder moved, then the seed from the repo
+        foreach ([__DIR__ . '/data/posts.json', __DIR__ . '/data/posts.seed.json'] as $old) {
+            if (is_file($old)) { $f = $old; break; }
+        }
     }
     if (!is_file($f)) return [];
     $d = json_decode((string)file_get_contents($f), true);
@@ -125,6 +178,31 @@ function gq_write_posts(array $posts): bool {
     $tmp = $f . '.tmp';
     if (@file_put_contents($tmp, $json, LOCK_EX) === false) return false;
     return @rename($tmp, $f);
+}
+
+/** where uploaded cover images live */
+function gq_uploads_dir(): string {
+    $dir = gq_storage_subdir('uploads');
+    if ($dir !== '') return $dir;
+    $fallback = dirname(__DIR__) . '/assets/blog/img';
+    if (!is_dir($fallback)) { @mkdir($fallback, 0775, true); }
+    return is_dir($fallback) ? $fallback : '';
+}
+
+/** image mime -> file extension, and the reverse; '' when unsupported */
+function gq_media_types(): array {
+    return [
+        'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp',
+        'image/gif'  => 'gif', 'image/avif' => 'avif', 'image/svg+xml' => 'svg',
+    ];
+}
+function gq_media_ext(string $mime): string {
+    $mime = strtolower($mime) === 'image/jpg' ? 'image/jpeg' : strtolower($mime);
+    return gq_media_types()[$mime] ?? '';
+}
+function gq_media_mime(string $ext): string {
+    $found = array_search(strtolower($ext), gq_media_types(), true);
+    return $found === false ? '' : $found;
 }
 
 function gq_slugify(string $s): string {

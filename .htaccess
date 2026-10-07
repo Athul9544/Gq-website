@@ -3,6 +3,10 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
+  # Uploaded cover images: /media/<file> -> api/media.php, which reads them from
+  # the storage folder above the web root (a deploy would delete them in here)
+  RewriteRule ^media/([A-Za-z0-9][A-Za-z0-9._-]*)$ /api/media.php?f=$1 [L,QSA]
+
   # Blog post pages: /our-campaigns/<slug>  ->  /our-campaigns/post.html
   # (every other page is a folder with its own index.html, so Apache serves it directly)
   RewriteCond %{REQUEST_FILENAME} !-f
