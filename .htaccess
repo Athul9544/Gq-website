@@ -1,0 +1,11 @@
+# Golden Qube — Apache rules for Hostinger (replaces the old vercel.json)
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Blog post pages: /our-campaigns/<slug>  ->  /our-campaigns/post.html
+  # (every other page is a folder with its own index.html, so Apache serves it directly)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^our-campaigns/([^/.]+)/?$ /our-campaigns/post.html [L]
+</IfModule>

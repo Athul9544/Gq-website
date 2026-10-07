@@ -277,7 +277,16 @@ body.at-login .top .brand img{display:none}
 
 <script>
 (function(){
-  var API = '/api/posts';
+  // Hostinger runs PHP, so the API lives at /api/*.php. If a host serves the
+  // extensionless routes instead, the first 404 switches over automatically.
+  var EXT = '.php';
+  function api(path, qs){ return '/api/' + path + EXT + (qs ? (qs.charAt(0)==='?' ? qs : '?'+qs) : ''); }
+  function ajax(path, qs, opts){
+    return fetch(api(path, qs), opts).then(function(r){
+      if (r.status === 404 && EXT === '.php') { EXT = ''; return fetch(api(path, qs), opts); }
+      return r;
+    });
+  }
   var key = null; try { key = sessionStorage.getItem('gq_admin'); } catch(e){}
   var posts = [], editing = null;
   var $ = function(id){ return document.getElementById(id); };
@@ -293,7 +302,7 @@ body.at-login .top .brand img{display:none}
 
   $('loginForm').addEventListener('submit', function(e){
     e.preventDefault(); $('loginMsg').textContent='Checking…'; $('loginMsg').className='hint'; $('loginBtn').disabled=true;
-    fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('pw').value})})
+    ajax('login','',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('pw').value})})
       .then(function(r){return r.json();}).then(function(j){
         $('loginBtn').disabled=false; if(j.ok){ key=$('pw').value; try{sessionStorage.setItem('gq_admin',key);}catch(e){} $('loginMsg').textContent=''; setView('home'); showApp(); }
         else { $('loginMsg').textContent='Wrong password. Please try again.'; $('loginMsg').className='hint err'; }
@@ -303,7 +312,7 @@ body.at-login .top .brand img{display:none}
 
   function load(){
     $('list').innerHTML='<div class="empty">Loading…</div>';
-    fetch(API+'?all=1&_='+Date.now(),{headers:headers()}).then(function(r){ if(r.status===401){showLogin();throw 0;} return r.json(); })
+    ajax('posts','?all=1&_='+Date.now(),{headers:headers()}).then(function(r){ if(r.status===401){showLogin();throw 0;} return r.json(); })
       .then(function(j){ posts=j; render(); }).catch(function(){ $('list').innerHTML='<div class="empty">Could not load posts.</div>'; });
   }
 
@@ -323,7 +332,7 @@ body.at-login .top .brand img{display:none}
       d.addEventListener('dragleave', function(){ d.style.borderColor=''; });
       d.addEventListener('drop', function(e){ e.preventDefault(); d.style.borderColor=''; var from=e.dataTransfer.getData('text/plain'); if(!from||from===p.id) return;
         var ids=posts.map(function(x){return x.id;}); var fi=ids.indexOf(from), ti=ids.indexOf(p.id); ids.splice(fi,1); ids.splice(ti,0,from);
-        fetch(API,{method:'PATCH',headers:headers(),body:JSON.stringify({order:ids})}).then(function(r){return r.json();}).then(function(j){ if(j.posts){posts=j.posts;render();toast('Order saved');} });
+        ajax('posts','',{method:'PATCH',headers:headers(),body:JSON.stringify({order:ids})}).then(function(r){return r.json();}).then(function(j){ if(j.posts){posts=j.posts;render();toast('Order saved');} });
       });
       l.appendChild(d);
     });
@@ -340,7 +349,7 @@ body.at-login .top .brand img{display:none}
   }
   function del(p){
     if(!confirm('Delete “'+p.title+'”? This cannot be undone.')) return;
-    fetch(API+'?id='+encodeURIComponent(p.id),{method:'DELETE',headers:headers()}).then(function(r){return r.json();}).then(function(j){
+    ajax('posts','?id='+encodeURIComponent(p.id),{method:'DELETE',headers:headers()}).then(function(r){return r.json();}).then(function(j){
       if(j.ok){ posts=j.posts; if(editing===p.id){ clearForm(); closeEditor(); } else render(); toast('Post deleted'); } else alert(j.error||'Delete failed');
     });
   }
@@ -354,7 +363,7 @@ body.at-login .top .brand img{display:none}
   $('file').addEventListener('change', function(){
     var f=this.files[0]; if(!f) return; if(f.size>3.5*1024*1024){ $('upMsg').textContent='Too large (max 3.5 MB)'; return; }
     $('upMsg').textContent='Uploading…'; var rd=new FileReader();
-    rd.onload=function(){ fetch('/api/upload',{method:'POST',headers:headers(),body:JSON.stringify({name:f.name,dataUrl:rd.result})}).then(function(r){return r.json();}).then(function(j){
+    rd.onload=function(){ ajax('upload','',{method:'POST',headers:headers(),body:JSON.stringify({name:f.name,dataUrl:rd.result})}).then(function(r){return r.json();}).then(function(j){
       if(j.url){ $('image').value=j.url; $('prev').src=j.url; $('upMsg').textContent='Uploaded ✓'; } else $('upMsg').textContent=j.error||'Upload failed';
     }).catch(function(){ $('upMsg').textContent='Upload failed'; }); };
     rd.readAsDataURL(f);
@@ -362,7 +371,7 @@ body.at-login .top .brand img{display:none}
   $('form').addEventListener('submit', function(e){
     e.preventDefault(); $('saveBtn').disabled=true; msg('Saving…');
     var body={id:$('id').value||undefined,title:$('title').value,slug:$('slug').value,link:$('link').value,excerpt:$('excerpt').value,image:$('image').value,content:$('content').value,published:$('published').checked,category:$('category').value,industry:$('industry').value,services:$('services').value};
-    fetch(API,{method:'POST',headers:headers(),body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(j){
+    ajax('posts','',{method:'POST',headers:headers(),body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(j){
       $('saveBtn').disabled=false;
       if(j.ok){ posts=j.posts; editing=j.post.id; $('id').value=j.post.id; $('slug').value=j.post.slug; $('slugPrev').textContent=j.post.slug; $('editorTitle').textContent='Edit post'; $('deleteBtn').classList.remove('hidden'); msg('Saved ✓','ok'); toast('Post saved'); render(); }
       else msg(j.error||'Save failed','err');

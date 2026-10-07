@@ -7,3 +7,9 @@ _*.html
 Thumbs.db
 
 api/config.php
+
+# live blog data + admin uploads are created on the server; never overwrite them from git
+api/data/posts.json
+api/data/posts.json.tmp
+api/data/.htaccess
+assets/blog/img/

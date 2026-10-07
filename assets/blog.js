@@ -19,10 +19,18 @@
   }
   function fmtDate(d) { try { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } }
   function href(p) { return p.link || ('/our-campaigns/' + p.slug); }
+  /* Hostinger serves PHP, so posts come from /api/posts.php; a 404 falls back
+     to the extensionless route in case the host provides that instead. */
+  function getPosts(qs) {
+    var url = '/api/posts.php' + qs;
+    return fetch(url, { cache: 'no-store' }).then(function (r) {
+      return r.status === 404 ? fetch('/api/posts' + qs, { cache: 'no-store' }) : r;
+    });
+  }
 
   var grid = document.getElementById('blogGrid');
   if (grid) {
-    fetch('/api/posts?_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (posts) {
+    getPosts('?_=' + Date.now()).then(function (r) { return r.json(); }).then(function (posts) {
       if (!Array.isArray(posts) || !posts.length) return;
       grid.innerHTML = posts.map(function (p) {
         return '<div role="listitem" class="works-item w-dyn-item"><a href="' + esc(href(p)) + '" class="blog-card w-inline-block">' + ARROW +
@@ -56,7 +64,7 @@
       if (cur.body.join('').trim() || cur.h) out.push(cur);
       return out.filter(function (s) { return s.body.join('').trim(); }).map(function (s) { return { h: s.h || 'Overview', html: toHtml(s.body.join('\n')) }; });
     }
-    fetch('/api/posts?slug=' + encodeURIComponent(slug) + '&_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (p) {
+    getPosts('?slug=' + encodeURIComponent(slug) + '&_=' + Date.now()).then(function (r) { return r.ok ? r.json() : null; }).then(function (p) {
       if (!p) { art.innerHTML = '<div class="gq-post-missing"><h1>Post not found</h1><p>This post may have been removed.</p><a href="/our-campaigns" class="gs-cta-btn">Back to Insights<span>&larr;</span></a></div>'; return; }
       document.title = p.title + ' | Golden Qube';
       var m = document.querySelector('meta[name="description"]'); if (m && p.excerpt) m.setAttribute('content', p.excerpt);
