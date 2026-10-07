@@ -254,7 +254,7 @@ body.at-login .top .brand img{display:none}
           <div>
             <input type="url" id="image" placeholder="Image URL">
             <div class="hint">or upload: <input type="file" id="file" accept="image/*"> <span id="upMsg"></span></div>
-            <div class="hint">JPG/PNG/WebP, up to 3.5 MB. Landscape works best.</div>
+            <div class="hint">JPG/PNG/WebP. Big photos are resized automatically. Landscape works best.</div>
           </div>
         </div>
         <label>Content</label>
@@ -360,13 +360,56 @@ body.at-login .top .brand img{display:none}
   $('title').addEventListener('input', function(){ if(!editing||!$('slug').value){ $('slug').value=slugify(this.value); } $('slugPrev').textContent=$('slug').value||'…'; });
   $('slug').addEventListener('input', function(){ this.value=slugify(this.value); $('slugPrev').textContent=this.value||'…'; });
   $('image').addEventListener('input', function(){ $('prev').src=this.value; });
+  // Cover images: phone and camera photos are routinely 3-10 MB, which the server
+  // will not take, so shrink them in the browser first. Anything already small
+  // enough (and SVG/GIF, which a canvas would ruin) is sent through untouched.
+  var MAX_EDGE = 2000, MAX_BYTES = 2.6*1024*1024;
+  function readAsDataUrl(file){
+    return new Promise(function(res, rej){
+      var rd=new FileReader(); rd.onload=function(){ res(rd.result); }; rd.onerror=function(){ rej(new Error('read')); }; rd.readAsDataURL(file);
+    });
+  }
+  function dataUrlBytes(u){ var i=u.indexOf(','); return i<0 ? 0 : Math.floor((u.length-i-1)*3/4); }
+  function shrink(file){
+    return readAsDataUrl(file).then(function(url){
+      if (/^data:image\/(svg\+xml|gif)/i.test(url)) return url;  // a canvas would ruin these
+      if (file.size <= MAX_BYTES) return url;                    // already small enough, keep it as-is
+      return new Promise(function(res){
+        var img=new Image();
+        img.onerror=function(){ res(url); };   // not decodable here; let the server decide
+        img.onload=function(){
+          var scale=Math.min(1, MAX_EDGE/Math.max(img.width, img.height));
+          var c=document.createElement('canvas');
+          c.width=Math.max(1, Math.round(img.width*scale)); c.height=Math.max(1, Math.round(img.height*scale));
+          var ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+          ctx.drawImage(img,0,0,c.width,c.height);
+          var q=0.86, out;
+          try { out=c.toDataURL('image/jpeg', q); } catch(e){ return res(url); }
+          while (dataUrlBytes(out) > MAX_BYTES && q > 0.45) { q-=0.1; out=c.toDataURL('image/jpeg', q); }
+          res(out);
+        };
+        img.src=url;
+      });
+    });
+  }
   $('file').addEventListener('change', function(){
-    var f=this.files[0]; if(!f) return; if(f.size>3.5*1024*1024){ $('upMsg').textContent='Too large (max 3.5 MB)'; return; }
-    $('upMsg').textContent='Uploading…'; var rd=new FileReader();
-    rd.onload=function(){ ajax('upload','',{method:'POST',headers:headers(),body:JSON.stringify({name:f.name,dataUrl:rd.result})}).then(function(r){return r.json();}).then(function(j){
-      if(j.url){ $('image').value=j.url; $('prev').src=j.url; $('upMsg').textContent='Uploaded ✓'; } else $('upMsg').textContent=j.error||'Upload failed';
-    }).catch(function(){ $('upMsg').textContent='Upload failed'; }); };
-    rd.readAsDataURL(f);
+    var f=this.files[0]; if(!f) return;
+    if(!/^image\//i.test(f.type||'')){ $('upMsg').textContent='Please choose an image file'; return; }
+    if(f.size>30*1024*1024){ $('upMsg').textContent='That file is huge (over 30 MB) — please pick a smaller image'; return; }
+    var input=this;
+    $('upMsg').textContent = f.size>MAX_BYTES ? 'Optimising image…' : 'Uploading…';
+    shrink(f).then(function(dataUrl){
+      if(dataUrlBytes(dataUrl) > 3.4*1024*1024) throw new Error('Could not get this image under 3.5 MB — please resize it first');
+      $('upMsg').textContent='Uploading…';
+      var name=f.name.replace(/\.[a-z0-9]+$/i,'') + (/^data:image\/jpeg/.test(dataUrl) ? '.jpg' : '');
+      return ajax('upload','',{method:'POST',headers:headers(),body:JSON.stringify({name:name,dataUrl:dataUrl})});
+    }).then(function(r){
+      if(r.status===401){ $('upMsg').textContent='Session expired — please log in again'; showLogin(); throw 0; }
+      return r.json();
+    }).then(function(j){
+      if(j.url){ $('image').value=j.url; $('prev').src=j.url; $('upMsg').textContent='Uploaded ✓'; input.value=''; }
+      else $('upMsg').textContent=j.error||'Upload failed';
+    }).catch(function(e){ if(e!==0) $('upMsg').textContent=(e&&e.message)||'Upload failed — please try again'; });
   });
   $('form').addEventListener('submit', function(e){
     e.preventDefault(); $('saveBtn').disabled=true; msg('Saving…');
